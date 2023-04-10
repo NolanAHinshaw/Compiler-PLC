@@ -14,7 +14,7 @@ enum TokenType {
     AND, OR, 
     INTEGER_LITERAL, FLOATING_POINT_LITERAL, VARIABLE_NAME,
     ERROR,
-    WHILE_CODE, IF_CODE, INT_LIT, FLOAT_LIT, ID, SEMICOLON,
+    WHILE_CODE, IF_CODE, ELSE_CODE, INT_LIT, FLOAT_LIT, ID, SEMICOLON,
 }
 
 class Token {
@@ -150,18 +150,18 @@ public class LexicalAnalyzer {
                 if(nextToken != ")")
                     System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");   
                 if(nextToken == "{")
-                    block();
+                    block(nextToken);
                 else {
-                    stmt();
+                    stmt(nextToken);
                     if(nextToken != ";")
                         System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");
                 } 
                 if(nextToken == "else")
                     getTokenType(nextToken);
                     if(nextToken == "{")
-                    block();
+                    block(nextToken);
                 else {
-                    stmt();
+                    stmt(nextToken);
                     if(nextToken != ";")
                         System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");
                 } 
@@ -171,13 +171,14 @@ public class LexicalAnalyzer {
     
     // <STMT> --> <IF_STMT> | <BLOCK> | <EXPR> | <WHILE_LOOP>
     public static void stmt(String nextToken){
-        if(nextToken == TokenType.WHILE_CODE)
+        TokenType type = getTokenType(nextToken);
+        if(nextToken == "while")
             while_loop(nextToken);
-        else if(nextToken == TokenType.IF_CODE)
+        else if(nextToken == "if")
             if_stmt(nextToken);
-        else if(nextToken == TokenType.CURLY_OPEN)
+        else if(nextToken == "{")
             block(nextToken);
-        else if(nextToken == TokenType.PAREN_OPEN || nextToken == TokenType.ID || nextToken == TokenType.INT_LIT)
+        else if(nextToken == "(" || type == TokenType.ID || type == TokenType.INT_LIT)
             expr(nextToken);
         else {
             System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");
@@ -186,7 +187,8 @@ public class LexicalAnalyzer {
     
     // <STMT_LIST> --> { <STMT> `;` }
     public static void stmt_list(String nextToken){
-        while(nextToken != TokenType.ID || nextToken != TokenType.IF_CODE || nextToken != TokenType.WHILE_CODE || nextToken != TokenType.INT_LIT || nextToken != TokenType.WHILE_CODE || nextToken != TokenType.PAREN_OPEN){
+        TokenType type = getTokenType(nextToken);
+        while(type != TokenType.ID || nextToken != "if" || nextToken != "while" || type != TokenType.INT_LIT || nextToken != "while" || nextToken != "("){
             // we will process the statement and check if the  nextToken is a semicolon
             // and continue processing until its not one of those 
             stmt(nextToken);
@@ -197,27 +199,27 @@ public class LexicalAnalyzer {
 
     // <WHILE_LOOP> --> `while` `(` <BOOL_EXPR> `)` ( <STMT> `;` | <BLOCK>)
     public static void while_loop(String nextToken){
-        if(nextToken != TokenType.WHILE_CODE)
+        if(nextToken != "while")
             System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");
         else {
             System.out.println("<" + TokenType.WHILE_CODE + ", " + nextToken + ">");
             getTokenType(nextToken);
-            if(nextToken != TokenType.PAREN_OPEN)
+            if(nextToken != "(")
                 System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");
             else {
                 System.out.println("<" + TokenType.PAREN_OPEN + ", " + nextToken + ">");
                 getTokenType(nextToken);
                 bool_expr(nextToken);
-                if(nextToken != TokenType.PAREN_CLOSE)
+                if(nextToken != ")")
                     System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");   
                 else {
                     System.out.println("<" + TokenType.PAREN_CLOSE + ", " + nextToken + ">");
                 }
-                if(nextToken == TokenType.CURLY_OPEN)
-                    block();
+                if(nextToken == "{")
+                    block(nextToken);
                 else {
-                    stmt();
-                    if(nextToken != TokenType.SEMICOLON)
+                    stmt(nextToken);
+                    if(nextToken != ";")
                         System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");
                     else {
                         System.out.println("<" + TokenType.SEMICOLON + ", " + nextToken + ">");
@@ -229,7 +231,7 @@ public class LexicalAnalyzer {
 
     // <BLOCK> --> `{` <STMT_LIST> `}`
     public static void block(String nextToken){
-        if(nextToken == TokenType.CURLY_OPEN) {
+        if(nextToken == "{") {
             System.out.println("<" + TokenType.CURLY_OPEN + ", " + nextToken + ">");
             stmt_list(nextToken);
             System.out.println("<" + TokenType.CURLY_CLOSE + ", " + nextToken + ">");
@@ -243,19 +245,20 @@ public class LexicalAnalyzer {
     public static void expr(String nextToken){
         term(nextToken);
 
-        while(nextToken == TokenType.ADDITION || nextToken == TokenType.SUBTRACTION){
+        while(nextToken == "+" || nextToken == "-"){
             getTokenType(nextToken);
-            term();
+            term(nextToken);
         }
     }
 
     // <TERM> --> <FACT> {(`*`|`/`|`%`) <FACT>}
     public static void term(String nextToken){
-        if(nextToken == TokenType.ID || nextToken == TokenType.INT_LIT)
+        TokenType type = getTokenType(nextToken);
+        if(type == TokenType.ID || type == TokenType.INT_LIT)
             getTokenType(nextToken);
         else {
-            if(nextToken == TokenType.PAREN_OPEN){
-                getTokenType(nextToken);;
+            if(nextToken == "("){
+                getTokenType(nextToken);
                 expr(nextToken);
             }
             else {
@@ -266,16 +269,17 @@ public class LexicalAnalyzer {
 
     // <FACT> --> ID | INT_LIT | FLOAT_LIT | `(` <EXPR> `)`
     public static void factor(String nextToken){
-        if (nextToken == TokenType.ID || nextToken == TokenType.INT_LIT)
+        TokenType type = getTokenType(nextToken);
+        if (type == TokenType.ID || type == TokenType.INT_LIT)
             getTokenType(nextToken);
         /* If the RHS is ( <expr> ), call lex to pass over the
         left parenthesis, call expr, and check for the right
         parenthesis */
         else { 
-            if (nextToken == TokenType.PAREN_OPEN){
+            if (nextToken == "("){
                 getTokenType(nextToken);
                 expr(nextToken);
-                if (nextToken == TokenType.PAREN_CLOSE)
+                if (nextToken == ")")
                     getTokenType(nextToken);
                 else {
                     System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");
@@ -291,24 +295,26 @@ public class LexicalAnalyzer {
 
     // <BOOL_EXPR> --> <BTERM> {(`>`|`<`|`>=`|`<=`) <BTERM>}
     public static void bool_expr(String nextToken){
-        b_term();
+        b_term(nextToken);
 
-        if(nextToken == TokenType.LESS_THAN || nextToken == TokenType.LESS_THAN_EQUAL || nextToken == TokenType.GREATER_THAN || nextToken == TokenType.GREATER_THAN_EQUAL){
+        if(nextToken == "<" || nextToken == "<=" || nextToken == ">" || nextToken == ">="){
             switch(nextToken){
-                case TokenType.LESS_THAN:
+                case "<":
                     System.out.println("<" + TokenType.LESS_THAN + ", " + nextToken + ">");
                     break;
-                case TokenType.GREATER_THAN:
+                case ">":
                     System.out.println("<" + TokenType.GREATER_THAN + ", " + nextToken + ">");
                     break;
-                case TokenType.LESS_THAN_EQUAL:
+                case "<=":
                     System.out.println("<" + TokenType.LESS_THAN_EQUAL + ", " + nextToken + ">");
                     break;
-                case TokenType.GREATER_THAN_EQUAL:
+                case ">=":
                     System.out.println("<" + TokenType.GREATER_THAN_EQUAL + ", " + nextToken + ">");
                     break;
+                default:
+                    break;
             }
-            b_term();
+            b_term(nextToken);
         }
         else {
             System.out.println("<" + TokenType.ERROR + ", " + nextToken + ">");
@@ -319,13 +325,15 @@ public class LexicalAnalyzer {
     public static void b_term(String nextToken){
         b_and(nextToken);
         
-        if(nextToken == TokenType.EQUALS || nextToken == TokenType.NOT_EQUAL){
+        if(nextToken == "==" || nextToken == "!="){
             switch(nextToken){
                 case "==": 
                     System.out.println("<" + TokenType.EQUALS + ", " + nextToken + ">");
                     break;
                 case "!=": 
                     System.out.println("<" + TokenType.NOT_EQUAL + ", " + nextToken + ">");
+                    break;
+                default:
                     break;
             }
             b_and(nextToken);
@@ -339,7 +347,7 @@ public class LexicalAnalyzer {
     public static void b_and(String nextToken){
         b_or(nextToken);
         
-        if(nextToken == TokenType.AND || nextToken == TokenType.OR){
+        if(nextToken == "&&" || nextToken == "||"){
             System.out.println("<" + TokenType.AND + ", " + nextToken + ">");
             b_and(nextToken);
         }
@@ -352,7 +360,7 @@ public class LexicalAnalyzer {
     public static void b_or(String nextToken){
         expr(nextToken);
         
-        if(nextToken == TokenType.OR){
+        if(nextToken == "||"){
             System.out.println("<" + TokenType.OR + ", " + nextToken + ">");
             expr(nextToken);
         }
