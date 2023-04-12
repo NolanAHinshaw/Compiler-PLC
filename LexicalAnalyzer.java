@@ -59,6 +59,8 @@ public class LexicalAnalyzer {
             pointer++;
             currToken = tokens.indexOf(pointer);
         }
+        else if(currToken == "EOF")
+            System.exit(0);
         return currToken;
     }
 
