@@ -14,7 +14,7 @@ enum TokenType {
     AND, OR, 
     INTEGER_LITERAL, FLOATING_POINT_LITERAL, VARIABLE_NAME,
     ERROR,
-    WHILE_CODE, IF_CODE, ELSE_CODE, INT_LIT, FLOAT_LIT, ID, SEMICOLON,
+    WHILE_CODE, IF_CODE, ELSE_CODE, INT_LIT, FLOAT_LIT, ID, SEMICOLON, EOF
 }
 
 class Token {
@@ -32,9 +32,9 @@ class Token {
 }
 
 public class LexicalAnalyzer {
-    static int pointer = 0;
-    static TokenType currToken = 0;
-    static ArrayList<Token> tokens;
+    public static int pointer = 0;
+    public static String currToken;
+    public static ArrayList<Token> tokens = new ArrayList<Token>();
     public static void main(String[] args) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader("testfile1.txt"));
         String line = reader.readLine();
@@ -54,10 +54,10 @@ public class LexicalAnalyzer {
         reader.close();
     }
 
-    public static TokenType getNextToken() {
-        if(pointer < Token.length){
+    public static String getNextToken() {
+        if(pointer < tokens.size()){
             pointer++;
-            currToken = tokens.indexOf(pointer);
+            currToken = tokens.get(pointer).type.toString();
         }
         else if(currToken == "EOF")
             System.exit(0);
@@ -182,7 +182,7 @@ public class LexicalAnalyzer {
     
     // <STMT> --> <IF_STMT> | <BLOCK> | <EXPR> | <WHILE_LOOP>
     public static void stmt(String nextToken){
-        TokenType type = getNextToken();
+        TokenType type = getTokenType(nextToken);
         if(nextToken == "while")
             while_loop(nextToken);
         else if(nextToken == "if")
@@ -198,7 +198,7 @@ public class LexicalAnalyzer {
     
     // <STMT_LIST> --> { <STMT> `;` }
     public static void stmt_list(String nextToken){
-        TokenType type = getNextToken();
+        TokenType type = getTokenType(nextToken);
         while(type != TokenType.ID || nextToken != "if" || nextToken != "while" || type != TokenType.INT_LIT || nextToken != "while" || nextToken != "("){
             // we will process the statement and check if the  nextToken is a semicolon
             // and continue processing until its not one of those 
@@ -264,7 +264,7 @@ public class LexicalAnalyzer {
 
     // <TERM> --> <FACT> {(`*`|`/`|`%`) <FACT>}
     public static void term(String nextToken){
-        TokenType type = getNextToken();
+        TokenType type = getTokenType(nextToken);
         if(type == TokenType.ID || type == TokenType.INT_LIT)
             nextToken = getNextToken();
         else {
@@ -280,7 +280,7 @@ public class LexicalAnalyzer {
 
     // <FACT> --> ID | INT_LIT | FLOAT_LIT | `(` <EXPR> `)`
     public static void factor(String nextToken){
-        TokenType type = getNextToken();
+        TokenType type = getTokenType(nextToken);
         if (type == TokenType.ID || type == TokenType.INT_LIT)
             nextToken = getNextToken();
         /* If the RHS is ( <expr> ), call lex to pass over the
