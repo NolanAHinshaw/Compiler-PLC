@@ -89,6 +89,12 @@ public class LexicalAnalyzer {
             case ")":
                 type = TokenType.PAREN_CLOSE;
                 break;
+            case "{":
+                type = TokenType.CURLY_OPEN;
+                break;
+            case "}":
+                type = TokenType.CURLY_CLOSE;
+                break;
             case "=":
                 type = TokenType.ASSIGNMENT;
                 break;
@@ -113,13 +119,27 @@ public class LexicalAnalyzer {
             case "||":
                 type = TokenType.OR;
                 break;
+            case ";":
+                type = TokenType.SEMICOLON;
+                break;
             default:
                 if (isInteger(word)) {
                     type = TokenType.INTEGER_LITERAL;
                 } else if (isFloatingPoint(word)) {
                     type = TokenType.FLOATING_POINT_LITERAL;
                 } else if (isVariableName(word)) {
-                    type = TokenType.VARIABLE_NAME;
+                    if(word.equals("while"))
+                        type = TokenType.WHILE_CODE;
+                    else if(word.equals("else")){
+                        type = TokenType.ELSE_CODE;
+                    } else if(word.equals("if")){
+                        type = TokenType.IF_CODE;
+                    } else if(word.equals("if")){
+                        type = TokenType.IF_CODE;
+                    }
+                    else {
+                        type = TokenType.VARIABLE_NAME;
+                    }
                 } else {
                     type = TokenType.ERROR;
                 }
