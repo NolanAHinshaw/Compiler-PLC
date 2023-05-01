@@ -1,0 +1,29 @@
+VAR --> A | B | C
+VAR <-- VARMAP[A]
+
+ASSIGN --> VAR = EXPR
+
+EXPR --> VAR
+EXPR <-- VAR
+
+EXPR1 --> VAR * EXPR2 
+EXPR1.value <-- VAR * EXPR2
+EXPR1.type <-- if ((VAR == INT_LIT) && (EXPR == INT_LIT)) return INT_LIT
+               if ((VAR == LONG) && (EXPR == LONG)) return LONG
+               if ((VAR == BYTE) && (EXPR == BYTE)) return BYTE
+               if ((VAR == DOUBLE) && (EXPR == DOUBLE)) return DOUBLE
+               if ((VAR == FLOAT_LIT) && (EXPR == FLOAT_LIT)) return DOUBLE
+               if ((VAR == FLOAT_LIT) && (EXPR == INT)) return FLOAT_LIT
+
+EXPR1 --> VAR + EXPR2 
+EXPR1.value <-- VAR + EXPR2
+EXPR1.type <-- if ((VAR == INT_LIT) && (EXPR == INT_LIT)) return INT_LIT
+               if ((VAR == LONG) && (EXPR == LONG)) return LONG
+               if ((VAR == BYTE) && (EXPR == BYTE)) return BYTE
+               if ((VAR == DOUBLE) && (EXPR == DOUBLE)) return DOUBLE
+               if ((VAR == FLOAT_LIT) && (EXPR == FLOAT_LIT)) return DOUBLE
+               if ((VAR == FLOAT_LIT) && (EXPR == INT)) return FLOAT_LIT
+
+EXPR --> INT_LIT
+EXPR <-- STRTOINT[INT_LIT]
+EXPR --> STRINGTOFLOAT(FLOAT_LIT) 
